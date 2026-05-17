@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard — QuizMaster{% endblock %}
+{% block content %}
+<div class="container">
+  <section class="leaderboard-header">
+    <div class="section-header">
+      <span class="section-icon">🏆</span>
+      <h2 class="section-title">Leaderboard</h2>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="lb-tabs">
+      <a href="{{ url_for('leaderboard', category='all') }}" class="lb-tab {% if category == 'all' %}active{% endif %}">
+        📊 All Categories
+      </a>
+      {% for cat in categories %}
+      <a href="{{ url_for('leaderboard', category=cat) }}" class="lb-tab {% if category == cat %}active{% endif %}">
+        {% if cat == 'science' %}🔬{% elif cat == 'math' %}📐{% else %}⚛️{% endif %}
+        {{ cat | capitalize }}
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Leaderboard Table -->
+  {% if scores %}
+  <div class="card lb-card">
+    <table class="lb-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Player</th>
+          <th>Category</th>
+          <th>Score</th>
+          <th>Performance</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in scores %}
+        <tr>
+          <td>
+            <span class="lb-rank {% if loop.index == 1 %}gold{% elif loop.index == 2 %}silver{% elif loop.index == 3 %}bronze{% endif %}">
+              {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}#{{ loop.index }}{% endif %}
+            </span>
+          </td>
+          <td><span class="lb-player">{{ s.username }}</span></td>
+          <td>
+            <span class="lb-category">
+              {% if s.category == 'science' %}🔬{% elif s.category == 'math' %}📐{% else %}⚛️{% endif %}
+              {{ s.category }}
+            </span>
+          </td>
+          <td><span class="lb-score">{{ s.score }}/{{ s.total }}</span></td>
+          <td>
+            <div class="lb-percentage">
+              <span>{{ s.percentage }}%</span>
+              <div class="lb-percentage-bar">
+                <div class="lb-percentage-fill" style="width: {{ s.percentage }}%"></div>
+              </div>
+            </div>
+          </td>
+          <td><span class="lb-date">{{ s.date.strftime('%b %d, %Y') }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="empty-state">
+      <div class="empty-icon">🎯</div>
+      <h3 class="empty-title">No Scores Yet</h3>
+      <p class="empty-text">Be the first to complete a quiz and claim the top spot!</p>
+      <a href="{{ url_for('home') }}" class="btn btn-primary" style="width: auto;">
+        Start Quiz →
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="footer-actions">
+    <a href="{{ url_for('home') }}" class="btn btn-ghost">
+      ← Back to Home
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}QuizMaster - Challenge Your Knowledge{% endblock %}
+{% block content %}
+<div class="container">
+  <section class="hero">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Test Your Knowledge
+    </div>
+    <h1>Challenge Your<br><span class="hero-title-accent">Brain Power</span></h1>
+    <p>Compete in Science, Math & Physics quizzes. Track your progress and climb the leaderboard!</p>
+  </section>
+
+  <section class="categories-grid">
+    <div class="category-card">
+      <div class="category-icon">S</div>
+      <h3>Science</h3>
+      <p>Biology, Chemistry & more</p>
+    </div>
+    <div class="category-card">
+      <div class="category-icon">M</div>
+      <h3>Math</h3>
+      <p>Algebra, Geometry & Calculus</p>
+    </div>
+    <div class="category-card">
+      <div class="category-icon">P</div>
+      <h3>Physics</h3>
+      <p>Mechanics, Waves & Energy</p>
+    </div>
+  </section>
+
+  <section class="card" style="max-width: 480px; margin: 0 auto;">
+    <div class="card-header">
+      <h2 class="card-title">Start Quiz</h2>
+      <p class="card-subtitle">Enter your name and pick a category</p>
+    </div>
+    <form action="{{ url_for('start') }}" method="POST">
+      <div class="form-group">
+        <label class="form-label">Your Name</label>
+        <input type="text" name="username" class="form-input" placeholder="Enter your name" required maxlength="30" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select name="category" class="form-select" required>
+          <option value="" disabled selected>Choose a category</option>
+          <option value="science">Science</option>
+          <option value="math">Math</option>
+          <option value="physics">Physics</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Start Quiz</button>
+    </form>
+  </section>
+
+  {% if top_scores %}
+  <section class="top-players">
+    <div class="card lb-card">
+      <div class="card-header" style="padding: 1.5rem 1.5rem 0;">
+        <h2 class="card-title">Top Players</h2>
+      </div>
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Category</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in top_scores %}
+          <tr>
+            <td>
+              <span class="lb-rank {% if loop.index == 1 %}gold{% elif loop.index == 2 %}silver{% elif loop.index == 3 %}bronze{% endif %}">
+                {% if loop.index == 1 %}#1{% elif loop.index == 2 %}#2{% elif loop.index == 3 %}#3{% else %}#{{ loop.index }}{% endif %}
+              </span>
+            </td>
+            <td><span class="lb-player">{{ s.username }}</span></td>
+            <td>
+              <span class="lb-category">{{ s.category }}</span>
+            </td>
+            <td>
+              <div class="lb-percentage">
+                <span class="lb-score">{{ s.score }}/{{ s.total }}</span>
+                <div class="lb-percentage-bar">
+                  <div class="lb-percentage-fill" style="width: {{ s.percentage }}%"></div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="footer-actions">
+      <a href="{{ url_for('leaderboard') }}" class="btn btn-secondary">View Full Leaderboard</a>
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

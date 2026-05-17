@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Question {{ current }} of {{ total }} — QuizMaster{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 700px;">
+  <!-- Progress -->
+  <div class="progress-container">
+    <div class="progress-info">
+      <span class="progress-text">Quiz Progress</span>
+      <span class="progress-count">{{ current }} / {{ total }}</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" style="width: {{ (current / total * 100)|round }}%"></div>
+    </div>
+  </div>
+
+  <!-- Question Card -->
+  <div class="card question-card">
+    <div class="question-header">
+      <span class="question-number">Question <span>{{ current }}</span> of {{ total }}</span>
+      <span class="category-badge">
+        {% if category == 'science' %}🔬{% elif category == 'math' %}📐{% else %}⚛️{% endif %}
+        {{ category }}
+      </span>
+    </div>
+
+    <h2 class="question-text">{{ question.q }}</h2>
+
+    <form action="{{ url_for('answer') }}" method="POST">
+      <div class="options">
+        {% set letters = ['A', 'B', 'C', 'D'] %}
+        {% for i in range(question.options|length) %}
+        <div class="option">
+          <input type="radio" name="answer" value="{{ i }}" id="opt{{ i }}" class="option-input" required>
+          <label for="opt{{ i }}" class="option-label">
+            <span class="option-letter">{{ letters[i] }}</span>
+            <span class="option-text">{{ question.options[i] }}</span>
+          </label>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div style="margin-top: 2rem;">
+        <button type="submit" class="btn btn-primary">
+          {% if current == total %}Finish Quiz ✓{% else %}Next Question →{% endif %}
+        </button>
+      </div>
+    </form>
+
+    <div class="user-info">
+      Playing as <strong>{{ username }}</strong>
+    </div>
+  </div>
+</div>
+{% endblock %}

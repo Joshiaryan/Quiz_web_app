@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Results — {{ percentage }}% — QuizMaster{% endblock %}
+{% block content %}
+<div class="container results-container" style="max-width: 700px;">
+  <!-- Results Card -->
+  <div class="card">
+    <div class="results-header">
+      <div class="score-circle-wrapper">
+        <div class="score-circle" style="--percentage: {{ percentage }}">
+          <div class="score-inner">
+            <div class="score-value">{{ percentage }}%</div>
+            <div class="score-label">Score</div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="results-title">
+        {% if percentage >= 80 %}🎉 Outstanding!
+        {% elif percentage >= 60 %}👍 Great Job!
+        {% elif percentage >= 40 %}📚 Keep Learning!
+        {% else %}💪 Don't Give Up!
+        {% endif %}
+      </h2>
+      <p class="results-subtitle">{{ username }} • <span style="text-transform: capitalize;">{{ category }}</span></p>
+
+      <div class="rank-badge">🏅 Rank #{{ rank }}</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value success">{{ score }}</div>
+        <div class="stat-label">Correct</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value danger">{{ total - score }}</div>
+        <div class="stat-label">Wrong</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value primary">{{ total }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <a href="{{ url_for('home') }}" class="btn btn-secondary">🔄 Play Again</a>
+      <a href="{{ url_for('leaderboard', category=category) }}" class="btn btn-success">🏆 Leaderboard</a>
+    </div>
+  </div>
+
+  <!-- Review Section -->
+  <section class="review-section">
+    <div class="section-header">
+      <span class="section-icon">📋</span>
+      <h3 class="section-title">Answer Review</h3>
+    </div>
+    <div class="review-list">
+      {% for item in review %}
+      <div class="review-item {{ 'correct' if item.selected == item.correct else 'wrong' }}">
+        <div class="review-question">{{ loop.index }}. {{ item.question }}</div>
+        <div class="review-answer">
+          {% if item.selected == item.correct %}
+            <span class="correct-answer">✓ {{ item.options[item.correct] }}</span>
+          {% else %}
+            Your answer: <span class="wrong-answer">{{ item.options[item.selected] }}</span> • 
+            Correct: <span class="correct-answer">{{ item.options[item.correct] }}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
