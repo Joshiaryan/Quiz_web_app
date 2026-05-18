@@ -199,6 +199,10 @@ def not_found(error):
 def server_error(error):
     return redirect(url_for("home"))
 
+@app.route("/test")
+def test():
+    return "Flask App Working"
+
 if __name__ == "__main__":
     print("QuizMaster - Starting...")
     print("Open your browser to: http://127.0.0.1:5000")
