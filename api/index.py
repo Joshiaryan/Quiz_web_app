@@ -26,11 +26,7 @@ with app.app_context():
 
 @app.route("/")
 def home():
-    try:
-        top_scores = Score.query.order_by(Score.percentage.desc(), Score.score.desc()).limit(5).all()
-    except:
-        top_scores = []
-    return render_template("home.html", top_scores=top_scores)
+    return "Server Running Successfully"
 
 @app.route("/start", methods=["POST"])
 def start():
@@ -190,6 +186,10 @@ def leaderboard():
         category=category,
         categories=categories
     )
+
+@app.route("/health")
+def health():
+    return {"message": "Server Running Successfully"}
 
 @app.errorhandler(404)
 def not_found(error):
