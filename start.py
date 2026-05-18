@@ -25,7 +25,6 @@ def main():
     
     # Check files exist
     required_files = [
-        'app.py',
         'static/style.css',
         'templates/base.html',
         'templates/home.html',
@@ -33,6 +32,10 @@ def main():
         'templates/results.html',
         'templates/leaderboard.html'
     ]
+
+    if not (os.path.exists('app.py') or os.path.exists('api/index.py')):
+        print("❌ Missing app entrypoint: app.py or api/index.py")
+        return False
     
     for file in required_files:
         if not os.path.exists(file):
@@ -47,7 +50,11 @@ def main():
         print("🌐 Open your browser to: http://127.0.0.1:5000")
         print("🛑 Press Ctrl+C to stop\n")
         
-        from app import app
+        try:
+            from app import app
+        except ModuleNotFoundError:
+            from api.index import app
+
         app.run(debug=True, host='127.0.0.1', port=5000)
         
     except KeyboardInterrupt:
