@@ -20,10 +20,163 @@ class Score(db.Model):
     category = db.Column(db.String(50), nullable=False)
     timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
 
+# Create the database tables
+with app.app_context():
+    db.create_all()
+
+from flask import render_template, request, session, redirect, url_for, flash
+from datetime import datetime
+import random
+
 @app.route("/")
 def home():
-    return "Server Running Successfully"
+    return render_template("home.html")
 
-if __name__ == "__main__":
-    app.run(debug=True, host="127.0.0.1", port=5000)
+@app.route("/start", methods=["POST"])
+def start():
+    username = request.form.get("username", "").strip()
+    category = request.form.get("category", "").strip()
+    
+    if not username or not category:
+        flash("Please enter your name and select a category", "error")
+        return redirect(url_for("home"))
+    
+    if category not in QUESTIONS:
+        flash("Invalid category", "error")
+        return redirect(url_for("home"))
+    
+    session["username"] = username
+    session["category"] = category
+    session["questions"] = random.sample(QUESTIONS[category], len(QUESTIONS[category]))
+    session["current"] = 0
+    session["score"] = 0
+    session["answers"] = []
+    
+    return redirect(url_for("quiz"))
+
+@app.route("/quiz")
+def quiz():
+    if "username" not in session or "questions" not in session:
+        flash("Please start a quiz first", "error")
+        return redirect(url_for("home"))
+    
+    current = session.get("current", 0)
+    questions = session.get("questions", [])
+    
+    if current >= len(questions):
+        return redirect(url_for("results"))
+    
+    question = questions[current]
+    return render_template(
+        "quiz.html",
+        username=session["username"],
+        category=session["category"],
+        question=question,
+        current=current + 1,
+        total=len(questions)
+    )
+
+@app.route("/answer", methods=["POST"])
+def answer():
+    if "username" not in session or "questions" not in session:
+        return redirect(url_for("home"))
+    
+    answer_idx = request.form.get("answer")
+    if answer_idx is None:
+        return redirect(url_for("quiz"))
+    
+    answer_idx = int(answer_idx)
+    current = session.get("current", 0)
+    questions = session.get("questions", [])
+    question = questions[current]
+    
+    is_correct = answer_idx == question["answer"]
+    if is_correct:
+        session["score"] = session.get("score", 0) + 1
+    
+    session["answers"].append({
+        "question": question["q"],
+        "options": question["options"],
+        "selected": answer_idx,
+        "correct": question["answer"]
+    })
+    
+    session["current"] = current + 1
+    
+    if session["current"] >= len(questions):
+        return redirect(url_for("results"))
+    
+    return redirect(url_for("quiz"))
+
+@app.route("/results")
+def results():
+    if "username" not in session or "score" not in session:
+        return redirect(url_for("home"))
+    
+    score = session.get("score", 0)
+    total = len(session.get("questions", []))
+    category = session.get("category", "")
+    username = session.get("username", "")
+    answers = session.get("answers", [])
+    
+    percentage = int((score / total * 100) if total > 0 else 0)
+    
+    # Save to database
+    new_score = Score(
+        name=username,
+        score=score,
+        category=category
+    )
+    db.session.add(new_score)
+    db.session.commit()
+    
+    # Get rank
+    rank = db.session.query(Score).filter_by(category=category).filter(Score.score > score).count() + 1
+    
+    # Clear session
+    session.clear()
+    
+    return render_template(
+        "results.html",
+        username=username,
+        category=category,
+        score=score,
+        total=total,
+        percentage=percentage,
+        rank=rank,
+        review=answers
+    )
+
+@app.route("/leaderboard")
+def leaderboard():
+    category = request.args.get("category", "all").lower()
+    categories = ["science", "math", "physics"]
+    
+    if category == "all":
+        scores_data = db.session.query(Score).order_by(Score.score.desc()).all()
+    elif category in categories:
+        scores_data = db.session.query(Score).filter_by(category=category).order_by(Score.score.desc()).all()
+    else:
+        scores_data = []
+    
+    # Format scores for display
+    scores = []
+    total_per_category = {"science": 10, "math": 10, "physics": 10}
+    
+    for s in scores_data:
+        scores.append({
+            "username": s.name,
+            "category": s.category,
+            "score": s.score,
+            "total": total_per_category.get(s.category, 10),
+            "percentage": int((s.score / total_per_category.get(s.category, 10) * 100)),
+            "date": s.timestamp
+        })
+    
+    return render_template(
+        "leaderboard.html",
+        scores=scores,
+        category=category,
+        categories=categories
+    )
 
