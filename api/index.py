@@ -20,13 +20,40 @@ class Score(db.Model):
     category = db.Column(db.String(50), nullable=False)
     timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
 
-# Create the database tables
-with app.app_context():
-    db.create_all()
+# Initialize database with error handling
+def init_database():
+    try:
+        # Ensure instance directory exists
+        instance_dir = os.path.join(basedir, '..', 'instance')
+        os.makedirs(instance_dir, exist_ok=True)
+        with app.app_context():
+            db.create_all()
+    except Exception as e:
+        # Fail silently in serverless environments
+        print(f"Database initialization note: {e}")
+
+# Try to initialize database on startup
+try:
+    init_database()
+except Exception:
+    pass
 
 from flask import render_template, request, session, redirect, url_for, flash
 from datetime import datetime
 import random
+
+# Retry initialization on first request
+_db_initialized = False
+
+@app.before_request
+def ensure_db_initialized():
+    global _db_initialized
+    if not _db_initialized:
+        try:
+            init_database()
+            _db_initialized = True
+        except Exception:
+            pass
 
 @app.route("/")
 def home():
@@ -121,17 +148,22 @@ def results():
     
     percentage = int((score / total * 100) if total > 0 else 0)
     
-    # Save to database
-    new_score = Score(
-        name=username,
-        score=score,
-        category=category
-    )
-    db.session.add(new_score)
-    db.session.commit()
-    
-    # Get rank
-    rank = db.session.query(Score).filter_by(category=category).filter(Score.score > score).count() + 1
+    # Save to database (with error handling for serverless environments)
+    rank = 1
+    try:
+        new_score = Score(
+            name=username,
+            score=score,
+            category=category
+        )
+        db.session.add(new_score)
+        db.session.commit()
+        
+        # Get rank
+        rank = db.session.query(Score).filter_by(category=category).filter(Score.score > score).count() + 1
+    except Exception as e:
+        print(f"Database save error: {e}")
+        # Continue without saving in serverless environments
     
     # Clear session
     session.clear()
@@ -151,27 +183,31 @@ def results():
 def leaderboard():
     category = request.args.get("category", "all").lower()
     categories = ["science", "math", "physics"]
-    
-    if category == "all":
-        scores_data = db.session.query(Score).order_by(Score.score.desc()).all()
-    elif category in categories:
-        scores_data = db.session.query(Score).filter_by(category=category).order_by(Score.score.desc()).all()
-    else:
-        scores_data = []
-    
-    # Format scores for display
     scores = []
-    total_per_category = {"science": 10, "math": 10, "physics": 10}
     
-    for s in scores_data:
-        scores.append({
-            "username": s.name,
-            "category": s.category,
-            "score": s.score,
-            "total": total_per_category.get(s.category, 10),
-            "percentage": int((s.score / total_per_category.get(s.category, 10) * 100)),
-            "date": s.timestamp
-        })
+    try:
+        if category == "all":
+            scores_data = db.session.query(Score).order_by(Score.score.desc()).all()
+        elif category in categories:
+            scores_data = db.session.query(Score).filter_by(category=category).order_by(Score.score.desc()).all()
+        else:
+            scores_data = []
+        
+        # Format scores for display
+        total_per_category = {"science": 10, "math": 10, "physics": 10}
+        
+        for s in scores_data:
+            scores.append({
+                "username": s.name,
+                "category": s.category,
+                "score": s.score,
+                "total": total_per_category.get(s.category, 10),
+                "percentage": int((s.score / total_per_category.get(s.category, 10) * 100)),
+                "date": s.timestamp
+            })
+    except Exception as e:
+        print(f"Leaderboard query error: {e}")
+        scores = []  # Return empty leaderboard on error
     
     return render_template(
         "leaderboard.html",
