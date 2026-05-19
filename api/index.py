@@ -3,10 +3,14 @@ from flask_sqlalchemy import SQLAlchemy
 from questions import QUESTIONS
 import os
 
-app = Flask(__name__)
+# Set up folder paths
+basedir = os.path.abspath(os.path.dirname(__file__))
+template_folder = os.path.join(basedir, '..', 'templates')
+static_folder = os.path.join(basedir, '..', 'static')
+
+app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
 
 # Database configuration
-basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, '..', 'instance', 'quiz.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
