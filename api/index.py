@@ -220,3 +220,8 @@ def leaderboard():
         categories=categories
     )
 
+# Route to handle favicon requests
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204
+
