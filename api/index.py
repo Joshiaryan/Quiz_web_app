@@ -9,6 +9,7 @@ template_folder = os.path.join(basedir, '..', 'templates')
 static_folder = os.path.join(basedir, '..', 'static')
 
 app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
+app.config['SECRET_KEY'] = 'your-secret-key-change-this-in-production'
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, '..', 'instance', 'quiz.db')
