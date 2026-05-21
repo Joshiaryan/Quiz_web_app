@@ -32,23 +32,19 @@
   <section class="card" style="max-width: 480px; margin: 0 auto;">
     <div class="card-header">
       <h2 class="card-title">Start Quiz</h2>
-      <p class="card-subtitle">Enter your name and pick a category</p>
+      <p class="card-subtitle">Pick a category to start the quiz</p>
     </div>
-    <form action="{{ url_for('start') }}" method="POST">
-      <div class="form-group">
-        <label class="form-label">Your Name</label>
-        <input type="text" name="username" class="form-input" placeholder="Enter your name" required maxlength="30" autocomplete="off">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Category</label>
-        <select name="category" class="form-select" required>
-          <option value="" disabled selected>Choose a category</option>
-          <option value="science">Science</option>
-          <option value="math">Math</option>
-          <option value="physics">Physics</option>
-        </select>
-      </div>
-      <button type="submit" class="btn btn-primary">Start Quiz</button>
+  <form action="{{ url_for('start') }}" method="POST" class="fadeInUp" style="animation-delay: 0.3s;">
+    <div class="form-group">
+      <label class="form-label" for="category">Category</label>
+      <select name="category" id="category" class="form-select" required>
+        <option value="" disabled selected>Choose a category</option>
+        <option value="science">Science</option>
+        <option value="math">Math</option>
+        <option value="physics">Physics</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Start Quiz</button>
     </form>
   </section>
 
